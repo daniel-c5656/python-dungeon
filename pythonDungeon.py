@@ -1,0 +1,399 @@
+# Written by Daniel C
+
+# NOTE: This module requires Python version 3.10.0+ to run due to the
+# match-case statements used.
+
+from random import randint
+from time import sleep
+import os
+from timeit import default_timer as timer
+
+class Player:
+    """The object that represents the player, storing its HP, damage, and heal amount.
+    Contains various methods to attack enemies, take damage from enemies, and recover."""
+    def __init__(self, hp:int=100, dmg:int=20, heal:int=15, points:int=0) -> None:
+        self.hp = hp
+        self.max_hp = hp
+        self.dmg = dmg
+        self.heal = heal
+        self.points = points
+    
+    def takeDamage(self, damage:int) -> None:
+        """Causes the player to take damage from an enemy.
+        The player has a flat 15% chance of dodging the attack."""
+        if randint(1, 100) <= 85:
+            self.hp -= damage
+            print(f"You took {damage} damage!")
+        else:
+            print("You dodged the attack!")
+        sleep(1)
+    
+    def recover(self) -> None:
+        """Recovers health when called by player input."""
+        self.hp += self.heal
+        print(f"You recovered {self.heal} HP!")
+        sleep(1)
+    
+    def attack(self, enemy) -> None:
+
+        """Attacks a single enemy.
+        An attack causes the targeted enemy to take damage, with the method giving the player's damage a ±10% deviation.
+        The player has a 20% chance of a critical hit, which grants a 1.5x damage multiplier."""
+        if randint(1, 10) < 9:
+            damage = randint(int(self.dmg*0.9), int(self.dmg*1.1))
+        else:
+            print("You got a critical hit!")
+            sleep(1)
+            damage = int(1.5*randint(int(self.dmg*0.9), int(self.dmg*1.1)))
+        enemy.takeDamage(damage)
+
+class Enemy:
+    """The generic class for an enemy. It is to be inherited by classes for specific enemies.
+    This class itself should only be called for testing purposes."""
+    def __init__(self, name:str, hp:int, dmg:int):
+        self.name = name
+        self.hp = hp
+        self.dmg = dmg
+
+    def display(self):
+        """Returns the enemy's name and HP."""
+        return f"{self.name}: {self.hp} HP"
+    
+    def takeDamage(self, damage:int):
+        """Called by player.attack() to inflict damage on the enemy."""
+        self.hp -= damage
+        print(f"You inflicted {damage} damage on {self.name}!")
+        sleep(1)
+    
+    def attack(self, player:Player):
+        """Attacks the player, with a ±10% deviation of its damage."""
+        print(self.name, "attacks!")
+        damage = randint(int(self.dmg*0.9), int(self.dmg*1.1))
+        sleep(1)
+        player.takeDamage(damage)
+    
+    def move(self, player, wave=None):
+        """Goes through random number generation to determine the move
+        that the enemy will take. By default, an enemy has a 100%
+        chance of attacking due to the absence of other moves."""
+        self.attack(player)
+
+    # Define special methods here (such as buffs appling to all enemies).
+    def spiderHeal(self):
+        self.hp += 5
+
+class Beetle(Enemy):
+
+    def __init__(self, name):
+        self.name = name
+        self.hp = 30
+        self.dmg = 12
+
+    def applyArmor(self):
+        """A healing mechanism for the beetle."""
+        armour = 10
+        self.hp += armour
+        print(f"{self.name} applied armour, gaining {armour} HP!")
+        sleep(1)
+    
+    def move(self, player, wave=None):
+        """Beetles have a 20% chance of healing themselves with armour.
+        Otherwise, they will simply attack."""
+        if randint(1, 100) <= 80:
+            self.attack(player)
+        else:
+            self.applyArmor()
+
+class Spider(Enemy):
+    def __init__(self, name):
+        self.name = name
+        self.hp = 50
+        self.dmg = 22
+
+    def healAll(self, wave):
+        """The spider uses the entire wave and calls the special healing method
+        defined in the Enemy class for every enemy in the wave."""
+        for i in wave:
+            i.spiderHeal()
+        print(f"{self.name} healed all enemies for 5 health!")
+        sleep(1)
+    
+    def move(self, player, wave):
+        """There is a 15% chance of the spider healing every enemy. Otherwise,
+        it will simply attack."""
+        if randint(1, 100) <= 85:
+            self.attack(player)
+        else:
+            self.healAll(wave)
+
+class Wasp(Enemy):
+
+    def __init__(self, name):
+        self.name = name
+        self.hp = 65
+        self.dmg = 35
+    
+    def distracted(self):
+        """A dummy method that makes the wasp not attack the player because wasps
+        suck. This also tempers their high damage and health."""
+        print(f"{self.name} is distracted by food!")
+        sleep(1)
+    
+    def move(self, player, wave=None):
+        """The wasp has a 20% chance of getting distracted. Otherwise it will
+        attack."""
+        if randint(1, 5) == 3:
+            self.distracted()
+        else:
+            self.attack(player)
+
+class Lose(Exception):
+    """This exception is raised when the player reaches zero health,
+    ending the game immediately."""
+    pass
+
+def titleScreen():
+    """Logic for the title screen. If the word GODMODE is inputted when exiting the help and credits, the player recieves infinite stats."""
+    checker = False
+
+    while True:
+        print("""
+=====================================================================================================
+
+8\"\"\"\"8                                   8\"\"\"\"8                                       88   8 eeee 
+8    8 e    e eeeee e   e eeeee eeeee    8    8 e   e eeeee eeeee eeee eeeee eeeee    88   8    8 
+8eeee8 8    8   8   8   8 8  88 8   8    8e   8 8   8 8   8 8   8 8    8  88 8   8    88  e8    8 
+88     8eeee8   8e  8eee8 8   8 8e  8    88   8 8e  8 8e  8 8e    8eee 8   8 8e  8    "8  8  eee8 
+88       88     88  88  8 8   8 88  8    88   8 88  8 88  8 88 "8 88   8   8 88  8     8  8  8    
+88       88     88  88  8 8eee8 88  8    88eee8 88ee8 88  8 88ee8 88ee 8eee8 88  8     8ee8  8eee 
+                                                                                                  
+=====================================================================================================                                                                                   
+
+[1] PLAY
+[2] HELP AND CREDITS
+[3] EXIT
+    """)
+
+        option = input("Select option (default 2): ").strip()
+        match option:
+            case "1":
+                break
+            case "3":
+                quit()
+            case _:
+                os.system("cls" if os.name == "nt" else "clear")
+                print("""
+INTRODUCTION
+
+Welcome to Python Dungeon, a simple turn-based strategy game built entirely in Python!
+Here, you will go off to fight the bugs that plague your coding success. 
+As you go through the dungeon, you will see new bugs, each increasing in strength. 
+Your goal is to get to the end of the dungeon, defeating all the bugs in your way
+so that your code can finally work!
+
+CHANGELOG
+
+The first version uploaded to GitHub.
+
+CREDITS
+
+Base code programmed by Daniel C, Grade 11
+Originally a creative experience as part of the IB CAS Program
+
+Title ASCII text generated on patorjk.com
+
+Originally finished on December 12, 2021
+First pushed to GitHub on January 29, 2022
+
+Thank you for playing!
+
+[ENTER] BACK TO TITLE
+        """)    
+                checker = input()
+                if checker == "GODMODE": checker = True
+                os.system("cls" if os.name == "nt" else "clear")
+    return checker
+def combatWave(waveNum, player, beetles, spiders, wasps):
+    """The logic for a wave of combat, repeating infinitely until
+    either the wave is cleared or the player is defeated."""
+
+    # Initialize the wave, placing enemy objects into a list.
+    wave = []
+    for i in range(1, beetles+1):
+        wave.append(Beetle(f"Beetle {i}"))
+    for i in range(1, spiders+1):
+        wave.append(Spider(f"Spider {i}"))
+    for i in range(1, wasps+1):
+        wave.append(Wasp(f"Wasp {i}"))
+    
+    # Infinitely loop while the wave is still active.
+    while True:
+        os.system("cls" if os.name == "nt" else "clear")
+        # Print the UI, including all of the enemies and their
+        # respective HPs.
+        print(f"""
+==================================================================================
+WAVE {waveNum}
+
+ENEMIES:
+""")
+        for i, j in enumerate(wave):
+            print(f"[{i+1}]", j.display())
+        print("""
+==================================================================================
+YOUR TURN
+
+[1]: ATTACK
+[2]: HEAL
+        """)
+        print("YOUR HP: {} HP".format(player.hp))
+        while True:
+            option = input("Please input an option: ").strip()
+            if option == "1" or option == "2":
+                break
+            else:
+                print("Invalid input.")
+        match option:
+            case "1":
+                while True:
+                    try:
+                        # Attacks an enemy using the index that the user provides.
+                        option = int(input("Select the enemy to attack: ").strip())
+                        toAttack = wave[option-1]
+                        player.attack(toAttack)
+                        break
+                    except ValueError:
+                        print("Please enter a valid integer.")
+                    except IndexError:
+                        print("Your input is outside of the range of enemies.")
+                
+                # Eliminates an enemy if its health is drained. Also checks if the wave
+                # is cleared.
+                if toAttack.hp <= 0:
+                    print(f"You eliminated {toAttack.name}!")
+                    sleep(1)
+                    wave.pop(option-1)
+                    if len(wave) == 0:
+                        os.system("cls" if os.name == "nt" else "clear")
+                        print("WAVE CLEARED!")
+                        break
+            
+            case "2":
+                player.recover()
+        # Loops through the wave to allow all the enemies to move.
+        for i in wave:
+            i.move(player, wave)
+
+        # Raises the Lose exception if the player runs out of health.
+        if player.hp <= 0:
+            raise Lose
+
+def LevelUp(player):
+    """Allows the player to upgrade their damage, health, and healing."""
+
+    player.points += 3
+    while player.points > 0:
+        print("""
+==================================================================================
+CHOOSE YOUR UPGRADES
+
+[1] DAMAGE: INCREASES DAMAGE BY 10 PER POINT
+[2] HEALTH: INCREASES HEALTH BY 20 PER POINT
+[3] HEALING: INCREASES HEAL AMOUNT BY 10 PER POINT
+
+[4] GO TO NEXT WAVE
+==================================================================================
+You have {} upgrade point(s)
+        """.format(player.points))
+        while True:
+            upgrade = input("Choose option: ").strip()
+            if upgrade not in ["1", "2", "3", "4"]:
+                print("Invalid upgrade option.")
+            else:
+                break
+        if upgrade == "4":
+            break
+
+        while True:
+            try:
+                pointsToSpend = int(input("Input how many points you want to spend on the upgrade: ").strip())
+                while player.points < pointsToSpend:
+                    print("You don't have enough points. You currently have {} points.".format(player.points))
+                    pointsToSpend = int(input("Input how many points you want to spend on the upgrade: ").strip())
+
+                while pointsToSpend < 0:
+                    print("Invalid input; please enter an integer from 0-{}".format(player.points))
+                    pointsToSpend = int(input("Input how many points you want to spend on the upgrade: ").strip())
+                break
+            except ValueError:
+                print("Please enter a valid integer.")
+
+        if pointsToSpend == 0:
+                print("Upgrade Cancelled.")
+
+        else:
+            match upgrade:
+                case "1":
+                    player.dmg += 10 * pointsToSpend
+                    print("Upgraded strength successfully!")
+
+                case "2":
+                    player.max_hp += 20 * pointsToSpend
+                    print("Upgraded health successfully!")
+
+                case "3":
+                    player.heal += 10 * pointsToSpend
+                    print("Upgraded healing successfully!")
+        
+        sleep(1)
+        os.system("cls" if os.name == "nt" else "clear")
+        player.points -= pointsToSpend
+    # Resets the player's health for the next wave.
+    player.hp = player.max_hp
+
+def main():
+    """The main routine, infinitely looping until the user stops the game."""
+    while True:
+        godmode = titleScreen()
+        try:
+            if godmode:
+                player = Player(694206942069420, 694206942069420, 694206942069420)
+            else:
+                player = Player(100, 20, 35)
+            start_time = timer()
+            combatWave(1, player, 2, 0, 0)
+            LevelUp(player)
+            combatWave(2, player, 1, 2, 0)
+            LevelUp(player)
+            combatWave(3, player, 0, 2, 1)
+            LevelUp(player)
+            combatWave(4, player, 1, 2, 2)
+            LevelUp(player)
+            combatWave(5, player, 2, 1, 3)
+            end_time = timer()
+
+        except Lose:
+            print("""
+You were unable to keep up with all the bugs in your code. Maybe go through another round of debugging?
+
+[1] RETURN TO TITLE
+[2] EXIT
+""")
+        else:
+            time_elapsed = (end_time - start_time) / 60
+            print(f"""
+Congratulations! You have completed the Python Dungeon and your code works once again!
+You managed to get through the whole dungeon in {round(time_elapsed, 1)} minutes.
+    
+Thanks for playing!
+
+[1] RETURN TO TITLE
+[2] EXIT
+""")
+    
+        option = input("Select option: ").lower().strip()
+        if option == "2":
+            break
+
+if __name__ == "__main__":
+    main()
