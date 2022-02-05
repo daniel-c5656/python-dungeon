@@ -8,8 +8,9 @@ After every wave, you get opportunites to upgrade stats such as your attack powe
 It's simply a self-contained Python script which doesn't require any libraries beyond those built-in. Just run it and you're good to go.
 
 ## Current Features
-- Player abilities: Attack, Heal  
-- Enemies: Beetle, Spider, Wasp  
+- Player abilities: Attack, Heal
+- Enemies: Beetle, Spider, Wasp, Mosquito
+- Poison
 - Critical hits
 - Dodges
 - Godmode for fun

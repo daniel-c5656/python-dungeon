@@ -12,11 +12,20 @@ class Player:
     """The object that represents the player, storing its HP, damage, and heal amount.
     Contains various methods to attack enemies, take damage from enemies, and recover."""
     def __init__(self, hp:int=100, dmg:int=20, heal:int=15, points:int=0) -> None:
+        # Base stats
         self.hp = hp
         self.max_hp = hp
         self.dmg = dmg
         self.heal = heal
         self.points = points
+
+        # State checkers
+        self.dodged = False
+        self.poisoned = False
+
+        # Poison
+        self.poisonDamage = 0
+        self.poisonedTurns = 0
     
     def takeDamage(self, damage:int) -> None:
         """Causes the player to take damage from an enemy.
@@ -24,14 +33,21 @@ class Player:
         if randint(1, 100) <= 85:
             self.hp -= damage
             print(f"You took {damage} damage!")
+            self.dodged = False
         else:
             print("You dodged the attack!")
+            self.dodged = True
         sleep(1)
     
     def recover(self) -> None:
         """Recovers health when called by player input."""
         self.hp += self.heal
         print(f"You recovered {self.heal} HP!")
+        if self.poisoned:
+            sleep(1)
+            print("You cured the poison!")
+            self.poisoned = False
+            self.poisonedTurns = 0
         sleep(1)
     
     def attack(self, enemy) -> None:
@@ -46,6 +62,13 @@ class Player:
             sleep(1)
             damage = int(1.5*randint(int(self.dmg*0.9), int(self.dmg*1.1)))
         enemy.takeDamage(damage)
+    
+    def takePoisonDamage(self):
+        """Inflicts damage on the player after the end of every enemy turn."""
+        self.hp -= self.poisonDamage
+        print(f"You took {self.poisonDamage} damage from poison!")
+        self.poisonedTurns += 1
+        sleep(1)
 
 class Enemy:
     """The generic class for an enemy. It is to be inherited by classes for specific enemies.
@@ -147,6 +170,36 @@ class Wasp(Enemy):
         else:
             self.attack(player)
 
+class Mosquito(Enemy):
+
+    def __init__(self, name):
+        self.name = name
+        self.hp = 300
+        self.dmg = 55
+
+    def distracted(self):
+        """Another dummy method that causes those stupid mosquitos to get distracted."""
+        print(f"{self.name} is attracted by another animal!")
+        sleep(1)
+    
+    def poisonPlayer(self, player):
+        """Causes the player to get poisoned, making them take damage over two turns."""
+        print("You've been poisoned!")
+        player.poisoned = True
+        player.poisonDamage = int(self.dmg/4)
+        sleep(1)
+    
+    def move(self, player, wave=None):
+        """Mosquitos hit pretty hard and have a chance of poisoning the player.
+        However, like wasps, they are easily distracted by other people they
+        can bite. They have a 33% chance of getting distracted, otherwise they will attack."""
+        if randint(1, 3) == 2:
+            self.distracted()
+        else:
+            self.attack(player)
+            if randint(1,2) == 2 and player.dodged == False:
+                self.poisonPlayer(player)
+            
 class Lose(Exception):
     """This exception is raised when the player reaches zero health,
     ending the game immediately."""
@@ -193,7 +246,11 @@ so that your code can finally work!
 
 CHANGELOG
 
-The first version uploaded to GitHub.
+V2.1 Beta
+- Created a new mosquito enemy, alongside a poison mechanic which affects the player
+- Added dodge checking so that some effects on the player don't engage if an attack is dodged
+- Compacted the main() function
+- Added a new wave which features the mosquito
 
 CREDITS
 
@@ -213,7 +270,7 @@ Thank you for playing!
                 if checker == "GODMODE": checker = True
                 os.system("cls" if os.name == "nt" else "clear")
     return checker
-def combatWave(waveNum, player, beetles, spiders, wasps):
+def combatWave(waveNum, player, beetles, spiders, wasps, mosquitos, lastRound=False):
     """The logic for a wave of combat, repeating infinitely until
     either the wave is cleared or the player is defeated."""
 
@@ -225,6 +282,8 @@ def combatWave(waveNum, player, beetles, spiders, wasps):
         wave.append(Spider(f"Spider {i}"))
     for i in range(1, wasps+1):
         wave.append(Wasp(f"Wasp {i}"))
+    for i in range(1, mosquitos+1):
+        wave.append(Mosquito(f"Mosquito {i}"))
     
     # Infinitely loop while the wave is still active.
     while True:
@@ -284,11 +343,22 @@ YOUR TURN
         for i in wave:
             i.move(player, wave)
 
+        if player.poisoned:
+            player.takePoisonDamage()
+            if player.poisonedTurns == 2:
+                print("The poison wore off!")
+                player.poisoned = False
+                player.poisonedTurns = 0
+                sleep(1)
+
         # Raises the Lose exception if the player runs out of health.
         if player.hp <= 0:
             raise Lose
 
-def LevelUp(player):
+    if not lastRound:
+        levelUp(player)
+
+def levelUp(player):
     """Allows the player to upgrade their damage, health, and healing."""
 
     player.points += 3
@@ -359,17 +429,14 @@ def main():
             if godmode:
                 player = Player(694206942069420, 694206942069420, 694206942069420)
             else:
-                player = Player(100, 20, 35)
+                player = Player(120, 25, 35)
             start_time = timer()
-            combatWave(1, player, 2, 0, 0)
-            LevelUp(player)
-            combatWave(2, player, 1, 2, 0)
-            LevelUp(player)
-            combatWave(3, player, 0, 2, 1)
-            LevelUp(player)
-            combatWave(4, player, 1, 2, 2)
-            LevelUp(player)
-            combatWave(5, player, 2, 1, 3)
+            combatWave(1, player, 2, 0, 0, 0)
+            combatWave(2, player, 1, 2, 0, 0)
+            combatWave(3, player, 0, 2, 1, 0)
+            combatWave(4, player, 1, 2, 2, 0)
+            combatWave(5, player, 2, 1, 3, 0)
+            combatWave(6, player, 0, 0, 0, 1, True)
             end_time = timer()
 
         except Lose:
