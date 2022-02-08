@@ -1,8 +1,5 @@
 # Written by Daniel C
 
-# NOTE: This module requires Python version 3.10.0+ to run due to the
-# match-case statements used.
-
 from random import randint
 from time import sleep
 import os
@@ -228,14 +225,13 @@ def titleScreen():
     """)
 
         option = input("Select option (default 2): ").strip()
-        match option:
-            case "1":
-                break
-            case "3":
-                quit()
-            case _:
-                os.system("cls" if os.name == "nt" else "clear")
-                print("""
+        if option == "1":
+            break
+        elif option == "3":
+            quit()
+        else:
+            os.system("cls" if os.name == "nt" else "clear")
+            print("""
 INTRODUCTION
 
 Welcome to Python Dungeon, a simple turn-based strategy game built entirely in Python!
@@ -245,6 +241,9 @@ Your goal is to get to the end of the dungeon, defeating all the bugs in your wa
 so that your code can finally work!
 
 CHANGELOG
+
+V2.1.1 Beta
+- Swapped the match-case statements for if statements to improve backwards-compatibility
 
 V2.1 Beta
 - Created a new mosquito enemy, alongside a poison mechanic which affects the player
@@ -266,10 +265,11 @@ Thank you for playing!
 
 [ENTER] BACK TO TITLE
         """)    
-                checker = input()
-                if checker == "GODMODE": checker = True
-                os.system("cls" if os.name == "nt" else "clear")
+            checker = input()
+            if checker == "GODMODE": checker = True
+            os.system("cls" if os.name == "nt" else "clear")
     return checker
+
 def combatWave(waveNum, player, beetles, spiders, wasps, mosquitos, lastRound=False):
     """The logic for a wave of combat, repeating infinitely until
     either the wave is cleared or the player is defeated."""
@@ -312,33 +312,32 @@ YOUR TURN
                 break
             else:
                 print("Invalid input.")
-        match option:
-            case "1":
-                while True:
-                    try:
-                        # Attacks an enemy using the index that the user provides.
-                        option = int(input("Select the enemy to attack: ").strip())
-                        toAttack = wave[option-1]
-                        player.attack(toAttack)
-                        break
-                    except ValueError:
-                        print("Please enter a valid integer.")
-                    except IndexError:
-                        print("Your input is outside of the range of enemies.")
-                
-                # Eliminates an enemy if its health is drained. Also checks if the wave
-                # is cleared.
-                if toAttack.hp <= 0:
-                    print(f"You eliminated {toAttack.name}!")
-                    sleep(1)
-                    wave.pop(option-1)
-                    if len(wave) == 0:
-                        os.system("cls" if os.name == "nt" else "clear")
-                        print("WAVE CLEARED!")
-                        break
+        if option == "1":
+            while True:
+                try:
+                    # Attacks an enemy using the index that the user provides.
+                    option = int(input("Select the enemy to attack: ").strip())
+                    toAttack = wave[option-1]
+                    player.attack(toAttack)
+                    break
+                except ValueError:
+                    print("Please enter a valid integer.")
+                except IndexError:
+                    print("Your input is outside of the range of enemies.")
             
-            case "2":
-                player.recover()
+            # Eliminates an enemy if its health is drained. Also checks if the wave
+            # is cleared.
+            if toAttack.hp <= 0:
+                print(f"You eliminated {toAttack.name}!")
+                sleep(1)
+                wave.pop(option-1)
+                if len(wave) == 0:
+                    os.system("cls" if os.name == "nt" else "clear")
+                    print("WAVE CLEARED!")
+                    break
+        
+        elif option == "2":
+            player.recover()
         # Loops through the wave to allow all the enemies to move.
         for i in wave:
             i.move(player, wave)
@@ -402,18 +401,17 @@ You have {} upgrade point(s)
                 print("Upgrade Cancelled.")
 
         else:
-            match upgrade:
-                case "1":
-                    player.dmg += 10 * pointsToSpend
-                    print("Upgraded strength successfully!")
+            if upgrade == "1":
+                player.dmg += 10 * pointsToSpend
+                print("Upgraded strength successfully!")
 
-                case "2":
-                    player.max_hp += 20 * pointsToSpend
-                    print("Upgraded health successfully!")
+            elif upgrade == "2":
+                player.max_hp += 20 * pointsToSpend
+                print("Upgraded health successfully!")
 
-                case "3":
-                    player.heal += 10 * pointsToSpend
-                    print("Upgraded healing successfully!")
+            elif "3":
+                player.heal += 10 * pointsToSpend
+                print("Upgraded healing successfully!")
         
         sleep(1)
         os.system("cls" if os.name == "nt" else "clear")
