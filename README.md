@@ -6,6 +6,7 @@ After every wave, you get opportunites to upgrade stats such as your attack powe
 
 ## Playing the game
 It's simply a self-contained Python script which doesn't require any libraries beyond those built-in. Just run it and you're good to go.
+You can also run it on any graphing calculator that supports Python 3 using the pythonDungeonTI.py file. The text is optimized for use on a TI-nspire CX II.
 
 ## Current Features
 - Player abilities: Attack, Heal
