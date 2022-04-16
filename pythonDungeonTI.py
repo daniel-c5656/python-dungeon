@@ -227,7 +227,8 @@ Graphing Calculator Edition
             exit()
         else:
             clearShell()
-            print("""
+            print("[ENTER] Next Line")
+            help = """
 INTRODUCTION
 
 Welcome to Python Dungeon, a simple
@@ -246,8 +247,15 @@ can finally work!
 
 CHANGELOG
 
+V2.1.1TI Beta Hotfix 1
+- Created a more easily scrollable
+credits section
+- Fixed a bug in Godmode's numbers
+being too large
+
 V2.1.1TI Beta
-- First version of Python dungeon
+- First version of Python Dungeon
+optimized for use with calculators
 
 V2.1.1 Beta
 - Swapped the match-case statements
@@ -278,11 +286,12 @@ First pushed to GitHub on
 January 29, 2022
 
 Thank you for playing!
+""".splitlines()
 
-Scroll up to see everything!
-
-[ENTER] BACK TO TITLE
-        """)    
+            for line in help:
+                print(line, end="")
+                input()
+            print("\n[ENTER] BACK TO TITLE")
             checker = input()
             if checker == "GODMODE": checker = True
             clearShell()
@@ -399,7 +408,7 @@ You have {} upgrade point(s)
                 print("Input how many points you want")
                 pointsToSpend = int(input("to spend on the upgrade: ").strip())
                 while player.points < pointsToSpend:
-                    print("You don't have enough points.\nYou currently have {} points.".format(player.points))
+                    print("You don't have enough points.\nYou currently have {} point(s).".format(player.points))
                     print("Input how many points you want")
                     pointsToSpend = int(input("to spend on the upgrade: ").strip())
 
@@ -439,7 +448,7 @@ def main():
         godmode = titleScreen()
         try:
             if godmode:
-                player = Player(6942069420, 6942069420, 6942069420)
+                player = Player(69420, 69420, 69420)
             else:
                 player = Player(120, 25, 35)
             combatWave(1, player, 2, 0, 0, 0)
