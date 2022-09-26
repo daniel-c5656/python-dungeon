@@ -1,9 +1,9 @@
 # Written by Daniel C
+# Graphing Calculator Edition
 
 from random import randint
 from time import sleep
-import os
-from timeit import default_timer as timer
+from sys import exit
 
 class Player:
     """The object that represents the player, storing its HP, damage, and heal amount.
@@ -29,7 +29,7 @@ class Player:
         The player has a flat 15% chance of dodging the attack."""
         if randint(1, 100) <= 85:
             self.hp -= damage
-            print(f"You took {damage} damage!")
+            print("You took {} damage!".format(damage))
             self.dodged = False
         else:
             print("You dodged the attack!")
@@ -39,7 +39,7 @@ class Player:
     def recover(self) -> None:
         """Recovers health when called by player input."""
         self.hp += self.heal
-        print(f"You recovered {self.heal} HP!")
+        print("You recovered {} HP!".format(self.heal))
         if self.poisoned:
             sleep(1)
             print("You cured the poison!")
@@ -63,7 +63,7 @@ class Player:
     def takePoisonDamage(self):
         """Inflicts damage on the player after the end of every enemy turn."""
         self.hp -= self.poisonDamage
-        print(f"You took {self.poisonDamage} damage from poison!")
+        print("You took {} damage from poison!".format(self.poisonDamage))
         self.poisonedTurns += 1
         sleep(1)
 
@@ -77,12 +77,12 @@ class Enemy:
 
     def display(self):
         """Returns the enemy's name and HP."""
-        return f"{self.name}: {self.hp} HP"
+        return "{}: {} HP".format(self.name, self.hp)
     
     def takeDamage(self, damage:int):
         """Called by player.attack() to inflict damage on the enemy."""
         self.hp -= damage
-        print(f"You inflicted {damage} damage on {self.name}!")
+        print("You inflicted {} damage on {}!".format(damage, self.name))
         sleep(1)
     
     def attack(self, player:Player):
@@ -113,7 +113,7 @@ class Beetle(Enemy):
         """A healing mechanism for the beetle."""
         armour = 10
         self.hp += armour
-        print(f"{self.name} applied armour, gaining {armour} HP!")
+        print("{} applied armour,\ngaining {} HP!".format(self.name, armour))
         sleep(1)
     
     def move(self, player, wave=None):
@@ -135,7 +135,7 @@ class Spider(Enemy):
         defined in the Enemy class for every enemy in the wave."""
         for i in wave:
             i.spiderHeal()
-        print(f"{self.name} healed all enemies for 5 health!")
+        print("{} healed all enemies\nfor 5 health!".format(self.name))
         sleep(1)
     
     def move(self, player, wave):
@@ -156,7 +156,7 @@ class Wasp(Enemy):
     def distracted(self):
         """A dummy method that makes the wasp not attack the player because wasps
         suck. This also tempers their high damage and health."""
-        print(f"{self.name} is distracted by food!")
+        print("{} is distracted by food!".format(self.name))
         sleep(1)
     
     def move(self, player, wave=None):
@@ -176,7 +176,7 @@ class Mosquito(Enemy):
 
     def distracted(self):
         """Another dummy method that causes those stupid mosquitos to get distracted."""
-        print(f"{self.name} is attracted by another animal!")
+        print("{} is attracted by\nanother animal!".format(self.name))
         sleep(1)
     
     def poisonPlayer(self, player):
@@ -202,22 +202,18 @@ class Lose(Exception):
     ending the game immediately."""
     pass
 
+def clearShell():
+    """Clears the terminal by adding newline statements for calculator compatibility."""
+    print("\n\n\n\n\n\n\n\n\n")
+
 def titleScreen():
     """Logic for the title screen. If the word GODMODE is inputted when exiting the help and credits, the player recieves infinite stats."""
     checker = False
 
     while True:
         print("""
-=====================================================================================================
-
-8\"\"\"\"8                                   8\"\"\"\"8                                       88   8 eeee 
-8    8 e    e eeeee e   e eeeee eeeee    8    8 e   e eeeee eeeee eeee eeeee eeeee    88   8    8 
-8eeee8 8    8   8   8   8 8  88 8   8    8e   8 8   8 8   8 8   8 8    8  88 8   8    88  e8    8 
-88     8eeee8   8e  8eee8 8   8 8e  8    88   8 8e  8 8e  8 8e    8eee 8   8 8e  8    "8  8  eee8 
-88       88     88  88  8 8   8 88  8    88   8 88  8 88  8 88 "8 88   8   8 88  8     8  8  8    
-88       88     88  88  8 8eee8 88  8    88eee8 88ee8 88  8 88ee8 88ee 8eee8 88  8     8ee8  8eee 
-                                                                                                  
-=====================================================================================================                                                                                   
+Python Dungeon
+Graphing Calculator Edition
 
 [1] PLAY
 [2] HELP AND CREDITS
@@ -228,46 +224,77 @@ def titleScreen():
         if option == "1":
             break
         elif option == "3":
-            quit()
+            exit()
         else:
-            os.system("cls" if os.name == "nt" else "clear")
-            print("""
+            clearShell()
+            print("[ENTER] Next Line")
+            help = """
 INTRODUCTION
 
-Welcome to Python Dungeon, a simple turn-based strategy game built entirely in Python!
-Here, you will go off to fight the bugs that plague your coding success. 
-As you go through the dungeon, you will see new bugs, each increasing in strength. 
-Your goal is to get to the end of the dungeon, defeating all the bugs in your way
-so that your code can finally work!
+Welcome to Python Dungeon, a simple
+turn-based strategy game built
+entirely in Python!
+Here, you will go off to
+fight the bugs that
+plague your coding success.
+As you go through the dungeon,
+you will see new bugs, each
+increasing in strength.
+Your goal is to get to the end of
+the dungeon, defeating all the
+bugs in your way so that your code
+can finally work!
 
 CHANGELOG
 
+V2.1.1TI Beta Hotfix 1
+- Created a more easily scrollable
+credits section
+- Fixed a bug in Godmode's numbers
+being too large
+
+V2.1.1TI Beta
+- First version of Python Dungeon
+optimized for use with calculators
+
 V2.1.1 Beta
-- Swapped the match-case statements for if statements to improve backwards-compatibility
+- Swapped the match-case statements
+for if statements to improve
+backwards-compatibility
 
 V2.1 Beta
-- Created a new mosquito enemy, alongside a poison mechanic which affects the player
-- Added dodge checking so that some effects on the player don't engage if an attack is dodged
+- Created a new mosquito enemy,
+alongside a poison mechanic which
+affects the player
+- Added dodge checking so that
+some effects on the player don't
+engage if an attack is dodged
 - Compacted the main() function
-- Added a new wave which features the mosquito
+- Added a new wave which features
+the mosquito
 
 CREDITS
 
-Base code programmed by Daniel C, Grade 11
-Originally a creative experience as part of the IB CAS Program
+Base code programmed by Daniel C,
+Grade 11
+Originally a creative experience
+as part of the IB CAS Program
 
-Title ASCII text generated on patorjk.com
-
-Originally finished on December 12, 2021
-First pushed to GitHub on January 29, 2022
+Originally finished on
+December 12, 2021
+First pushed to GitHub on
+January 29, 2022
 
 Thank you for playing!
+""".splitlines()
 
-[ENTER] BACK TO TITLE
-        """)    
+            for line in help:
+                print(line, end="")
+                input()
+            print("\n[ENTER] BACK TO TITLE")
             checker = input()
             if checker == "GODMODE": checker = True
-            os.system("cls" if os.name == "nt" else "clear")
+            clearShell()
     return checker
 
 def combatWave(waveNum, player, beetles, spiders, wasps, mosquitos, lastRound=False):
@@ -277,34 +304,29 @@ def combatWave(waveNum, player, beetles, spiders, wasps, mosquitos, lastRound=Fa
     # Initialize the wave, placing enemy objects into a list.
     wave = []
     for i in range(1, beetles+1):
-        wave.append(Beetle(f"Beetle {i}"))
+        wave.append(Beetle("Beetle {}".format(i)))
     for i in range(1, spiders+1):
-        wave.append(Spider(f"Spider {i}"))
+        wave.append(Spider("Spider {}".format(i)))
     for i in range(1, wasps+1):
-        wave.append(Wasp(f"Wasp {i}"))
+        wave.append(Wasp("Wasp {}".format(i)))
     for i in range(1, mosquitos+1):
-        wave.append(Mosquito(f"Mosquito {i}"))
+        wave.append(Mosquito("Mosquito {}".format(i)))
     
     # Infinitely loop while the wave is still active.
     while True:
-        os.system("cls" if os.name == "nt" else "clear")
+        clearShell()
         # Print the UI, including all of the enemies and their
         # respective HPs.
-        print(f"""
-==================================================================================
-WAVE {waveNum}
+        print("""
+WAVE {}
 
 ENEMIES:
-""")
+""".format(waveNum))
         for i, j in enumerate(wave):
-            print(f"[{i+1}]", j.display())
+            print("[{}]".format(i+1), j.display())
         print("""
-==================================================================================
-YOUR TURN
-
 [1]: ATTACK
-[2]: HEAL
-        """)
+[2]: HEAL""")
         print("YOUR HP: {} HP".format(player.hp))
         while True:
             option = input("Please input an option: ").strip()
@@ -323,16 +345,16 @@ YOUR TURN
                 except ValueError:
                     print("Please enter a valid integer.")
                 except IndexError:
-                    print("Your input is outside of the range of enemies.")
+                    print("Your input is out of range.")
             
             # Eliminates an enemy if its health is drained. Also checks if the wave
             # is cleared.
             if toAttack.hp <= 0:
-                print(f"You eliminated {toAttack.name}!")
+                print("You eliminated {}!".format(toAttack.name))
                 sleep(1)
                 wave.pop(option-1)
                 if len(wave) == 0:
-                    os.system("cls" if os.name == "nt" else "clear")
+                    clearShell()
                     print("WAVE CLEARED!")
                     break
         
@@ -363,15 +385,13 @@ def levelUp(player):
     player.points += 3
     while player.points > 0:
         print("""
-==================================================================================
 CHOOSE YOUR UPGRADES
 
-[1] DAMAGE: INCREASES DAMAGE BY 10 PER POINT
-[2] HEALTH: INCREASES HEALTH BY 20 PER POINT
-[3] HEALING: INCREASES HEAL AMOUNT BY 10 PER POINT
+[1] DAMAGE: +10 PER POINT
+[2] HEALTH: +20 PER POINT
+[3] HEALING: +10 PER POINT
 
 [4] GO TO NEXT WAVE
-==================================================================================
 You have {} upgrade point(s)
         """.format(player.points))
         while True:
@@ -385,14 +405,17 @@ You have {} upgrade point(s)
 
         while True:
             try:
-                pointsToSpend = int(input("Input how many points you want to spend on the upgrade: ").strip())
+                print("Input how many points you want")
+                pointsToSpend = int(input("to spend on the upgrade: ").strip())
                 while player.points < pointsToSpend:
-                    print("You don't have enough points. You currently have {} points.".format(player.points))
-                    pointsToSpend = int(input("Input how many points you want to spend on the upgrade: ").strip())
+                    print("You don't have enough points.\nYou currently have {} point(s).".format(player.points))
+                    print("Input how many points you want")
+                    pointsToSpend = int(input("to spend on the upgrade: ").strip())
 
                 while pointsToSpend < 0:
                     print("Invalid input; please enter an integer from 0-{}".format(player.points))
-                    pointsToSpend = int(input("Input how many points you want to spend on the upgrade: ").strip())
+                    print("Input how many points you want")
+                    pointsToSpend = int(input("to spend on the upgrade: ").strip())
                 break
             except ValueError:
                 print("Please enter a valid integer.")
@@ -414,7 +437,7 @@ You have {} upgrade point(s)
                 print("Upgraded healing successfully!")
         
         sleep(1)
-        os.system("cls" if os.name == "nt" else "clear")
+        clearShell()
         player.points -= pointsToSpend
     # Resets the player's health for the next wave.
     player.hp = player.max_hp
@@ -425,30 +448,30 @@ def main():
         godmode = titleScreen()
         try:
             if godmode:
-                player = Player(694206942069420, 694206942069420, 694206942069420)
+                player = Player(69420, 69420, 69420)
             else:
                 player = Player(120, 25, 35)
-            start_time = timer()
             combatWave(1, player, 2, 0, 0, 0)
             combatWave(2, player, 1, 2, 0, 0)
             combatWave(3, player, 0, 2, 1, 0)
             combatWave(4, player, 1, 2, 2, 0)
             combatWave(5, player, 2, 1, 3, 0)
             combatWave(6, player, 0, 0, 0, 1, True)
-            end_time = timer()
 
         except Lose:
             print("""
-You were unable to keep up with all the bugs in your code. Maybe go through another round of debugging?
+You were unable to keep up with all 
+the bugs in your code. Maybe go
+through another round of debugging?
 
 [1] RETURN TO TITLE
 [2] EXIT
 """)
         else:
-            time_elapsed = (end_time - start_time) / 60
-            print(f"""
-Congratulations! You have completed the Python Dungeon and your code works once again!
-You managed to get through the whole dungeon in {round(time_elapsed, 1)} minutes.
+            print("""
+Congratulations! You have completed
+the Python Dungeon and your code
+works once again!
     
 Thanks for playing!
 
@@ -460,5 +483,4 @@ Thanks for playing!
         if option == "2":
             break
 
-if __name__ == "__main__":
-    main()
+main()
